@@ -1,11 +1,7 @@
 from app.config import Settings
 from app.providers.base import ModelProvider
+from app.providers.colab import ColabProvider
 from app.providers.ollama import OllamaProvider
-from app.providers.remote import RemoteProvider
-
-def get_provider(settings: Settings) -> ModelProvider:
-    if settings.model_provider == "remote":
-        if not settings.remote_model_url:
-            raise ValueError("REMOTE_MODEL_URL must be configured for remote provider")
-        return RemoteProvider(settings.remote_model_url, settings.remote_model_api_key)
-    return OllamaProvider(settings.ollama_base_url, settings.ollama_model)
+def get_provider(s:Settings)->ModelProvider:
+    if s.model_provider.lower()=="ollama": return OllamaProvider()
+    return ColabProvider(s.colab_base_url,s.colab_chat_path,s.colab_model,s.colab_api_key,s.colab_timeout_seconds)
