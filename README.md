@@ -2,24 +2,29 @@
 
 A modular, permission-aware personal AI assistant with a FastAPI backend and a lightweight web HUD.
 
-## Current scaffold
+## Structure
+- `app/config.py` — environment-based runtime configuration
+- `app/memory.py` — SQLite conversations, facts, tasks, and audit events
+- `app/brain.py` — assistant orchestration
+- `app/providers/` — local Ollama and optional remote model providers
+- `app/tools/` — capability modules for desktop, developer, and personal workflows
+- `app/api/` — FastAPI routes
+- `static/index.html` — pink assistant interface
+- `main.py` — FastAPI entry point
+- `scaffold.py` — project directory bootstrap helper
+- `docs/ROADMAP.md` — staged implementation plan
 
-- `app/config.py` — environment and persisted runtime configuration.
-- `app/memory.py` — SQLite-backed conversations, facts, tasks, and audit events.
-- `app/brain.py` — async orchestration and tool execution loop.
-- `app/tools/` — capability modules for desktop, developer, and personal workflows.
-- `static/index.html` — pink Nova-inspired assistant interface.
-- `main.py` — FastAPI application entry point.
-- `scaffold.py` — local project bootstrap helper.
-
-## Design principles
-
-RemoteAI starts as a modular monolith: simple to run locally, easy to extend, and explicit about permissions. Model access is provider-based so local Ollama can be used first, with optional remote endpoints such as a Colab-hosted model.
+## Principles
+Start as a modular monolith: lightweight to run locally, easy to extend, and explicit about permissions. Ollama is the default provider; an optional remote endpoint can be configured.
 
 ## Safety
+Tool execution is not enabled by default. Add narrowly scoped, allow-listed tools and require user approval for destructive actions and external side effects. Never expose unrestricted shell or desktop control.
 
-Tool execution is allow-listed. Destructive actions and external side effects must require explicit user confirmation. Do not expose an unrestricted shell or desktop-control endpoint.
+## Quick start
+1. Create and activate a virtual environment.
+2. Install dependencies with `pip install -r requirements.txt`.
+3. Copy `.env.example` to `.env` and adjust settings if needed.
+4. Start Ollama and pull the configured model, or configure the remote provider.
+5. Run `uvicorn main:app --reload` and open `http://127.0.0.1:8000`.
 
-## Status
-
-Initial repository scaffold. See `docs/ROADMAP.md` for the staged implementation plan.
+See `docs/ROADMAP.md` for the next milestones.

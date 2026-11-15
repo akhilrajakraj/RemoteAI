@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RemoteAI</title>
+<style>
+:root{color-scheme:dark;--bg:#100d18;--panel:#1c1728;--pink:#ff79bd;--muted:#b9adc5}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#39213d,var(--bg) 55%);color:#fff;font:15px Inter,system-ui,sans-serif}
+main{width:min(920px,92vw);margin:0 auto;padding:42px 0}header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+h1{margin:0;letter-spacing:.04em}h1 span{color:var(--pink)}.status{color:#b6f2ce;font-size:13px}
+.orb{width:150px;height:150px;margin:42px auto 24px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0,#ffb8df 9%,#fa69b4 34%,#7d3d9a 70%,#21152e 100%);box-shadow:0 0 55px #f76db766,inset -12px -15px 28px #160d2b}
+.panel{background:#1c1728dd;border:1px solid #ffffff18;border-radius:18px;padding:20px;box-shadow:0 18px 50px #0005}
+#chat{min-height:190px;max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.message{padding:12px 14px;border-radius:14px;max-width:85%;white-space:pre-wrap;line-height:1.5}.user{align-self:flex-end;background:#713b70}.assistant{align-self:flex-start;background:#30263d}
+form{display:flex;gap:10px;margin-top:14px}input{flex:1;min-width:0;background:#100d18;border:1px solid #ffffff26;border-radius:12px;padding:14px;color:white}
+button{border:0;border-radius:12px;padding:0 20px;background:var(--pink);color:#241222;font-weight:700;cursor:pointer}.hint{color:var(--muted);font-size:12px;margin-top:14px}
+@media(max-width:560px){main{padding:24px 0}.orb{width:112px;height:112px;margin:30px auto 18px}form{flex-direction:column}button{padding:14px}}
+</style></head>
+<body><main><header><h1>Remote<span>AI</span></h1><div class="status">● Personal assistant</div></header>
+<div class="orb" aria-hidden="true"></div><section class="panel"><div id="chat" aria-live="polite"><div class="message assistant">Hello! I'm RemoteAI. Connect a model provider and let's get started.</div></div>
+<form id="chat-form"><input id="message" autocomplete="off" placeholder="Ask RemoteAI anything..." required><button type="submit">Send</button></form>
+<div class="hint">Conversations are stored locally in the configured SQLite database.</div></section></main>
+<script>
+const form=document.querySelector("#chat-form"),input=document.querySelector("#message"),chat=document.querySelector("#chat");let conversationId=null;
+function addMessage(role,content){const item=document.createElement("div");item.className="message "+role;item.textContent=content;chat.appendChild(item);chat.scrollTop=chat.scrollHeight}
+form.addEventListener("submit",async e=>{e.preventDefault();const message=input.value.trim();if(!message)return;input.value="";addMessage("user",message);try{const response=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message,conversation_id:conversationId})});const data=await response.json();if(!response.ok)throw new Error(data.detail||"Request failed");conversationId=data.conversation_id;addMessage("assistant",data.response)}catch(error){addMessage("assistant","Connection error: "+error.message)}});
+</script></body></html>
