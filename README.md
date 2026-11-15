@@ -1,30 +1,40 @@
 # RemoteAI
 
-A modular, permission-aware personal AI assistant with a FastAPI backend and a lightweight web HUD.
+RemoteAI is a lightweight local personal assistant. The browser UI, API, conversation memory and agent orchestration run locally; Google Colab hosts model inference.
 
-## Structure
-- `app/config.py` — environment-based runtime configuration
-- `app/memory.py` — SQLite conversations, facts, tasks, and audit events
-- `app/brain.py` — assistant orchestration
-- `app/providers/` — local Ollama and optional remote model providers
-- `app/tools/` — capability modules for desktop, developer, and personal workflows
-- `app/api/` — FastAPI routes
-- `static/index.html` — pink assistant interface
-- `main.py` — FastAPI entry point
-- `scaffold.py` — project directory bootstrap helper
-- `docs/ROADMAP.md` — staged implementation plan
+## Multi-agent layout
+- Coordinator: decomposes a multi-part request into at most three subtasks and synthesises results.
+- Specialists: Research, Developer, Planner, Writer, Analyst and General.
+- Concurrent execution is bounded by `AGENT_MAX_PARALLEL` (default 3).
+- Specialists currently share one Colab model endpoint and use different role prompts. They are not separate model instances.
 
-## Principles
-Start as a modular monolith: lightweight to run locally, easy to extend, and explicit about permissions. Ollama is the default provider; an optional remote endpoint can be configured.
+## Run locally (Windows PowerShell)
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+uvicorn main:app --reload
+```
+Open http://127.0.0.1:8000 and configure your active Colab tunnel URL.
 
-## Safety
-Tool execution is not enabled by default. Add narrowly scoped, allow-listed tools and require user approval for destructive actions and external side effects. Never expose unrestricted shell or desktop control.
+## Colab API contract
+The adapter currently expects an OpenAI-compatible API:
+- POST `/v1/chat/completions`
+- Request JSON: `model`, `messages`, `temperature`
+- Response JSON: `choices[0].message.content`
+- Optional GET `/health`
 
-## Quick start
-1. Create and activate a virtual environment.
-2. Install dependencies with `pip install -r requirements.txt`.
-3. Copy `.env.example` to `.env` and adjust settings if needed.
-4. Start Ollama and pull the configured model, or configure the remote provider.
-5. Run `uvicorn main:app --reload` and open `http://127.0.0.1:8000`.
+The exact contract must be checked against your Colab notebook. A different endpoint or response schema requires a small adapter change in `app/providers/colab.py`.
 
-See `docs/ROADMAP.md` for the next milestones.
+## Local configuration
+The URL/model are stored in `data/config.json` (ignored by Git). Keep API keys in local `.env`; never commit tunnel URLs or credentials. Colab tunnel URLs are temporary and must be refreshed after a runtime restart.
+
+## API
+- `GET /api/health`
+- `GET /api/provider/config`, `GET /api/provider/health`
+- `PUT /api/provider/colab`
+- `POST /api/chat`
+- `GET/POST /api/memory/facts`, `GET/POST /api/memory/tasks`
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
