@@ -11,10 +11,9 @@ class Settings(BaseSettings):
     database_url:str="sqlite:///./data/remoteai.db"
     model_provider:str="colab"
     colab_base_url:str=""
-    colab_chat_path:str="/v1/chat/completions"
-    colab_model:str="remoteai-model"
+    colab_model:str="qwen3.5:9b"
     colab_api_key:str|None=None
-    colab_timeout_seconds:float=120
+    colab_timeout_seconds:float=180
     agent_max_parallel:int=3
     data_dir:Path=Path("data")
     model_config=SettingsConfigDict(env_file=".env",env_file_encoding="utf-8",extra="ignore")
@@ -26,7 +25,7 @@ def get_settings()->Settings:
     if path.exists():
         try:
             saved=json.loads(path.read_text(encoding="utf-8"))
-            for key in ("colab_base_url","colab_chat_path","colab_model"):
+            for key in ("colab_base_url","colab_model"):
                 if saved.get(key) and not os.getenv(key.upper()):
                     setattr(settings,key,saved[key])
         except (OSError,json.JSONDecodeError):
@@ -39,7 +38,7 @@ def save_runtime_config(values:dict)->dict:
     path=settings.data_dir/"config.json"
     try: current=json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
     except (OSError,json.JSONDecodeError): current={}
-    for key in ("colab_base_url","colab_chat_path","colab_model"):
+    for key in ("colab_base_url","colab_model"):
         if values.get(key) is not None: current[key]=str(values[key]).strip()
     temp=path.with_suffix(".tmp")
     temp.write_text(json.dumps(current,indent=2),encoding="utf-8")
